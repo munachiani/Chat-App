@@ -6,3 +6,5 @@ cd to the source directory then run: javac chat/Chat.java
 
 # To run application
 java chat.Chat <Port Number>
+  
+# Also compile whwn you make changes
