@@ -28,7 +28,7 @@ public class Chat {
 	            }
 
 	        }else{
-	            System.out.println("Invalid Args : Java ChatApp <PORT>");
+	            System.out.println("Invalid Args : java chat.Chat <PORT>");
 	        }
 
 	    }
@@ -193,7 +193,6 @@ public class Chat {
             private Socket clientSocket = null;
             private boolean isStopped = false;
             private Clients(BufferedReader in,Socket ipAddress) {
-//                super();
                 this.in = in;
                 this.clientSocket = ipAddress;
             }
