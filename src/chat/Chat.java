@@ -11,7 +11,7 @@ import java.net.UnknownHostException;
 import java.util.*;
 
 public class Chat {
-	
+
 	 public static void main(String[] arg){
 
 
@@ -39,7 +39,7 @@ public class Chat {
     private int clientCounter = 1;
     private Server messageReciever ;
 
-  
+
     private Chat(int myPort) {
         this.myPort = myPort;
     }
@@ -80,16 +80,18 @@ public class Chat {
                     }
                     destinationHost.sendMessage(message.toString());
                     System.out.println("Mesage send successfully");
-                }else
-                    System.out.println("No Connection available with provided connection id,kindly check list command");
+          }else
+          System.out.println(
+					"No Connection available with provided connection id,kindly check list command");
+
             }catch(NumberFormatException ne){
                 System.out.println("Invalid Connection id ,check list command");
             }
         }else{
-            System.out.println("Invalid command format , Kindly follow : send <connection id.> <message>");
+        System.out.println("Invalid command format , Kindly follow : send <connection id.> <message>");
         }
     }
-    
+
     private void listDestinations(){
         System.out.println("Id:\tIP Address\tPort");
         if(destinationsHosts.isEmpty()){
@@ -104,32 +106,32 @@ public class Chat {
     }
 
     private void connect(String[] commandArg){
-        
+
     }
 
     private void terminate(String[] commandArg){
-       
+
 
     }
 
     private void startChat(){
 
-    	
+
         Scanner scanner = new Scanner(System.in);
         try{
-        	
+
         	 myIP = InetAddress.getLocalHost();
              messageReciever = new Server();
              new Thread(messageReciever).start();
-             
-             
+
+
             while(true){
                 System.out.print("Enter the command :");
                 String command = scanner.nextLine();
                 if(command != null && command.trim().length() > 0){
                     command = command.trim();
                     if(command.equalsIgnoreCase("help")){
-                    	help();        
+                    	help();
                     }else if(command.equalsIgnoreCase("myip")){
                         System.out.println(getmyIP());
                     }else if(command.equalsIgnoreCase("myport")){
@@ -180,6 +182,55 @@ public class Chat {
         messageReciever.stopChat();
     }
 
+		        private class Clients implements Runnable{
+
+		            private BufferedReader in = null;
+		            private Socket clientSocket = null;
+		            private boolean isStopped = false;
+		            private Clients(BufferedReader in,Socket ipAddress) {
+		                this.in = in;
+		                this.clientSocket = ipAddress;
+		            }
+
+		            @Override
+		            public void run() {
+
+		                while(!clientSocket.isClosed() && !this.isStopped)
+		                {
+		                    String st;
+		                    try {
+		                        st = in.readLine();
+		                        System.out.println("Message from "
+														+clientSocket.getInetAddress().getHostAddress()
+														+":"+clientSocket.getPort()+" : "+st);
+
+		                    } catch (IOException e) {
+		                    	e.printStackTrace();
+		                    }
+		                }
+		            }
+
+		            public void stop(){
+
+		                if(in != null)
+		                    try {
+		                        in.close();
+		                    } catch (IOException e) {
+		                    }
+
+		                if(clientSocket != null)
+		                    try {
+		                        clientSocket.close();
+		                    } catch (IOException e) {
+		                    }
+		                isStopped = true;
+		                Thread.currentThread().interrupt();
+		            }
+
+		        } //end of client class
+
+
+						
     private class Server implements Runnable{
 
         BufferedReader in = null;
@@ -187,49 +238,6 @@ public class Chat {
         boolean isStopped ;
         List<Clients> clientList = new ArrayList<Clients>();
 
-        private class Clients implements Runnable{
-
-            private BufferedReader in = null;
-            private Socket clientSocket = null;
-            private boolean isStopped = false;
-            private Clients(BufferedReader in,Socket ipAddress) {
-                this.in = in;
-                this.clientSocket = ipAddress;
-            }
-
-            @Override
-            public void run() {
-
-                while(!clientSocket.isClosed() && !this.isStopped)
-                {
-                    String st;
-                    try {
-                        st = in.readLine();
-                        System.out.println("Message from " +clientSocket.getInetAddress().getHostAddress()+":"+clientSocket.getPort()+" : "+st);
-                    } catch (IOException e) {
-                    	e.printStackTrace();
-                    }
-                }
-            }
-
-            public void stop(){
-
-                if(in != null)
-                    try {
-                        in.close();
-                    } catch (IOException e) {
-                    }
-
-                if(clientSocket != null)
-                    try {
-                        clientSocket.close();
-                    } catch (IOException e) {
-                    }
-                isStopped = true;
-                Thread.currentThread().interrupt();
-            }
-
-        }
         @Override
         public void run() {
 
@@ -243,7 +251,9 @@ public class Chat {
                         socket = s.accept();
                         in = new BufferedReader(new
                                 InputStreamReader(socket.getInputStream()));
-                        System.out.println(socket.getInetAddress().getHostAddress()+":"+socket.getPort()+" : client successfully connected.");
+                        System.out.println(socket.getInetAddress().getHostAddress()
+												+":"+socket.getPort()+" : client successfully connected.");
+
                         Clients clients = new Clients(in, socket);
                         new Thread(clients).start();
                         clientList.add(clients);
@@ -266,8 +276,8 @@ public class Chat {
         }
 
     }
-    
-    
+
+
 
 }
 
@@ -330,4 +340,3 @@ class Destination{
         return  remoteHost + "\t" + remotePort;
     }
 }
-
