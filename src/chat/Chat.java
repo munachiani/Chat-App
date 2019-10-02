@@ -107,6 +107,29 @@ public class Chat {
 
     private void connect(String[] commandArg){
 
+        if(commandArg != null && commandArg.length == 3){
+            try {
+                InetAddress remoteAddress = InetAddress.getByName(commandArg[1]);
+                int remotePort = Integer.parseInt(commandArg[2]);
+                Destination destinationHost = new Destination(remoteAddress,remotePort);
+                if(destinationHost.initConnections()){
+                	destinationsHosts.put(clientCounter, destinationHost);
+                    clientCounter++;
+                    System.out.println("Connected successfully");
+
+                }else{
+
+                    System.out.println("Unable to establish connection, try again");
+                }
+            }catch(NumberFormatException ne){
+                System.out.println("Invalid Remote Host Port, unable to connect");
+            }catch (UnknownHostException e) {
+                System.out.println("Invalid Remote Host Address, unable to connect");
+            }
+        }else{
+            System.out.println("Invalid command format , Kindly follow : connect <destination> <port no>");
+        }
+
     }
 
     private void terminate(String[] commandArg){
@@ -230,7 +253,7 @@ public class Chat {
 		        } //end of client class
 
 
-						
+
     private class Server implements Runnable{
 
         BufferedReader in = null;
@@ -238,8 +261,9 @@ public class Chat {
         boolean isStopped ;
         List<Clients> clientList = new ArrayList<Clients>();
 
+
         @Override
-        public void run() {
+				public void run() {
 
             ServerSocket s;
             try {
@@ -285,7 +309,7 @@ class Destination{
 
     private InetAddress remoteHost;
     private int remotePort;
-    private Socket con ;
+    private Socket connection;
     private PrintWriter out;
     private boolean isConnected;
 
@@ -297,8 +321,8 @@ class Destination{
 
     public boolean initConnections(){
         try {
-            this.con = new Socket(remoteHost, remotePort);
-            this.out = new PrintWriter(con.getOutputStream(), true);
+            this.connection = new Socket(remoteHost, remotePort);
+            this.out = new PrintWriter(connection.getOutputStream(), true);
             isConnected = true;
         } catch (IOException e) {
 
@@ -327,9 +351,9 @@ class Destination{
 
         if(out != null)
             out.close();
-        if(con != null){
+        if(connection != null){
             try {
-                con.close();
+                connection.close();
             } catch (IOException e) {
             }
         }
