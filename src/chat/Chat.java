@@ -127,15 +127,21 @@ public class Chat {
 
     private void terminate(String[] commandArg){
 			if(commandArg != null){
+				System.out.println("Attempting to terminate Cid: " + commandArg[1]);
 					try {
 						int id = Integer.parseInt(commandArg[1]);
 						if(destinationsHosts.containsKey(id) == false) {
 							System.out.println("Invalid connection ID, unable to terminate, try list");
 							return;
-						}
-	    			Destination destinationHost = destinationsHosts.get(id);
-						destinationHost.closeConnection();
+						}	//continue if theres a valid id
 
+	    			Destination destinationHost = destinationsHosts.get(id);
+						boolean closed = !destinationHost.closeConnection();
+						if(closed){
+							System.out.println("ConnectionID: "+ id + " was terminated, but i'll be back!");
+							destinationsHosts.remove(id);
+						}
+						
 					}catch(NumberFormatException e){
                 System.out.println("Invalid connection ID, unable to terminate");
 									}
@@ -384,7 +390,7 @@ class Destination{
             out.println(message);
         }
     }
-    public void closeConnection(){
+    public boolean closeConnection(){
 
         if(out != null)
             out.close();
@@ -395,6 +401,7 @@ class Destination{
             }
         }
         isConnected = false;
+				return isConnected;
     }
     @Override
     public String toString() {
