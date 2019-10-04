@@ -54,14 +54,14 @@ public class Chat {
 
 
     private void help(){
-        System.out.println(" information about the available user interface options or command manual");
-        System.out.println("myip : Display the ip Address of this process");
-        System.out.println("myport : Displays the port on which process is listening for incoming connections");
-        System.out.println("connect <Destination> <dest-port> : Establish new connection with destination IP and Destination Port");
-        System.out.println("list : Display all connection with detsination hosts");
-        System.out.println("terminate <connection_id> : close the connection for the destination host wrt to connection id");
-        System.out.println("send <connection_id> <message> : Send message with connection id to the destination host and port");
-        System.out.println("exit : closes all connections and terminate the process");
+        System.out.println("  --> Command manual <--");
+        System.out.println("terminate <connection_id> ......... close the connection for the selected id");
+        System.out.println("connect <Destination> <dest-port> . Connect with destination IP and Port");
+        System.out.println("send <connection_id> <message> .... Send message using connection id");
+        System.out.println("myip ...... Display the ip Address of this process");
+        System.out.println("myport .... Displays the port listening for incoming connections");
+        System.out.println("list ...... Display all connection with detsination hosts");
+        System.out.println("exit ..... closes all connections and terminate the process");
         System.out.println("\n");
 
     }
@@ -153,7 +153,8 @@ public class Chat {
                 String command = scanner.nextLine();
                 if(command != null && command.trim().length() > 0){
                     command = command.trim();
-                    if(command.equalsIgnoreCase("help")){
+										//common help args..
+                    if(command.equalsIgnoreCase("help") || command.equalsIgnoreCase("/h") || command.equalsIgnoreCase("-h")){
                     	help();
                     }else if(command.equalsIgnoreCase("myip")){
                         System.out.println(getmyIP());
@@ -175,6 +176,8 @@ public class Chat {
                         sendMessage(commandArg);
                     }
                     else if(command.equalsIgnoreCase("exit")){
+											
+											  System.out.println("Closing connections...");
                         System.out.println("Chat Exited!");
                         closeAll();
                         System.exit(0);
@@ -205,54 +208,73 @@ public class Chat {
         messageReciever.stopChat();
     }
 
-		        private class Clients implements Runnable{
 
-		            private BufferedReader in = null;
-		            private Socket clientSocket = null;
-		            private boolean isStopped = false;
-		            private Clients(BufferedReader in,Socket ipAddress) {
-		                this.in = in;
-		                this.clientSocket = ipAddress;
-		            }
+		/*
+				internal/helper object declarations below...
+		*/
 
-		            @Override
-		            public void run() {
+		/*
+			Client class -
+			connects to the specified tcp socket on a new thread (Runnable)
+			listens for new messages from the connected client.
+			server magages a list of these.
 
-		                while(!clientSocket.isClosed() && !this.isStopped)
-		                {
-		                    String st;
-		                    try {
-		                        st = in.readLine();
-		                        System.out.println("Message from "
-														+clientSocket.getInetAddress().getHostAddress()
-														+":"+clientSocket.getPort()+" : "+st);
-
-		                    } catch (IOException e) {
-		                    	e.printStackTrace();
-		                    }
-		                }
-		            }
-
-		            public void stop(){
-
-		                if(in != null)
-		                    try {
-		                        in.close();
-		                    } catch (IOException e) {
-		                    }
-
-		                if(clientSocket != null)
-		                    try {
-		                        clientSocket.close();
-		                    } catch (IOException e) {
-		                    }
-		                isStopped = true;
-		                Thread.currentThread().interrupt();
-		            }
-
-		        } //end of client class
+		*/
 
 
+    private class Clients implements Runnable{
+
+        private BufferedReader in = null;
+        private Socket clientSocket = null;
+        private boolean isStopped = false;
+        private Clients(BufferedReader in,Socket ipAddress) {
+            this.in = in;
+            this.clientSocket = ipAddress;
+        }
+
+        @Override
+        public void run() {
+
+            while(!clientSocket.isClosed() && !this.isStopped)
+            {
+                String st;
+                try {
+                    st = in.readLine();
+                    System.out.println("Message from "
+										+clientSocket.getInetAddress().getHostAddress()
+										+":"+clientSocket.getPort()+" : "+st);
+
+                } catch (IOException e) {
+                	e.printStackTrace();
+                }
+            }
+        }
+
+        public void stop(){
+
+            if(in != null)
+                try {
+                    in.close();
+                } catch (IOException e) {
+                }
+
+            if(clientSocket != null)
+                try {
+                    clientSocket.close();
+                } catch (IOException e) {
+                }
+            isStopped = true;
+            Thread.currentThread().interrupt();
+        }
+
+    } //end of client class
+
+/*
+	Server class -
+	creates new tcp socket on a new thread (Runnable)
+	this allows us to have multiple non blocking connections.
+
+*/
 
     private class Server implements Runnable{
 
@@ -303,7 +325,14 @@ public class Chat {
 
 
 
-}
+}		//end of server class
+
+/*
+	Destination class
+	wraps the socket and output stream of each client to make send messages easier.
+	also help manage socket connection.
+
+*/
 
 class Destination{
 
@@ -363,4 +392,4 @@ class Destination{
     public String toString() {
         return  remoteHost + "\t" + remotePort;
     }
-}
+}	//end of destination class
