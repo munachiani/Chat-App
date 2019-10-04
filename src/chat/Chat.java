@@ -314,7 +314,7 @@ public class Chat {
 
             ServerSocket s;
             try {
-                s = new ServerSocket(myPort);
+                s = new ServerSocket(getmyPort());
                 System.out.println("Server Waiting For The Client");
                 while(!isStopped)
                 {
