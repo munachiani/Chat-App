@@ -128,10 +128,12 @@ public class Chat {
     private void terminate(String[] commandArg){
 			if(commandArg != null){
 					try {
-						int id = Integer.parseInt(commandArg);
-						if(destinationsHosts.containsKey(id) == false) throw NumberFormatException;
-
-	    			Destination destinationHost = destinationsHosts.get(id;
+						int id = Integer.parseInt(commandArg[1]);
+						if(destinationsHosts.containsKey(id) == false) {
+							System.out.println("Invalid connection ID, unable to terminate, try list");
+							return;
+						}
+	    			Destination destinationHost = destinationsHosts.get(id);
 						destinationHost.closeConnection();
 
 					}catch(NumberFormatException e){
