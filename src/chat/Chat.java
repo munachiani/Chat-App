@@ -104,6 +104,8 @@ public class Chat {
             try {
                 InetAddress remoteAddress = InetAddress.getByName(commandArg[1]);
                 int remotePort = Integer.parseInt(commandArg[2]);
+								System.out.println("Connecting to " + remoteAddress + " on port: " +remotePort);
+								
                 Destination destinationHost = new Destination(remoteAddress,remotePort);
                 if(destinationHost.initConnections()){
                 	destinationsHosts.put(clientCounter, destinationHost);
@@ -141,7 +143,7 @@ public class Chat {
 							System.out.println("ConnectionID: "+ id + " was terminated, but i'll be back!");
 							destinationsHosts.remove(id);
 						}
-						
+
 					}catch(NumberFormatException e){
                 System.out.println("Invalid connection ID, unable to terminate");
 									}
