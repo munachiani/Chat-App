@@ -13,24 +13,17 @@ import java.util.*;
 public class Chat {
 
 	 public static void main(String[] arg){
-
-
 	        if(arg != null && arg.length > 0){
-
 	            try{
-
 	                int listenPort = Integer.parseInt(arg[0]);
 	                Chat chatApp = new Chat(listenPort);
 	                chatApp.startChat();
-
 	            }catch(NumberFormatException nfe){
 	                System.out.println("Invalid Argument for the port");
 	            }
-
 	        }else{
 	            System.out.println("Invalid Args : java chat.Chat <PORT>");
 	        }
-
 	    }
 
     private int myPort;
@@ -51,7 +44,6 @@ public class Chat {
     private int getmyPort(){
         return myPort;
     }
-
 
     private void help(){
         System.out.println("  --> Command manual <--");
@@ -176,7 +168,7 @@ public class Chat {
                         sendMessage(commandArg);
                     }
                     else if(command.equalsIgnoreCase("exit")){
-											
+
 											  System.out.println("Closing connections...");
                         System.out.println("Chat Exited!");
                         closeAll();
