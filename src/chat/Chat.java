@@ -105,7 +105,7 @@ public class Chat {
                 InetAddress remoteAddress = InetAddress.getByName(commandArg[1]);
                 int remotePort = Integer.parseInt(commandArg[2]);
 								System.out.println("Connecting to " + remoteAddress + " on port: " +remotePort);
-								
+
                 Destination destinationHost = new Destination(remoteAddress,remotePort);
                 if(destinationHost.initConnections()){
                 	destinationsHosts.put(clientCounter, destinationHost);
@@ -191,7 +191,7 @@ public class Chat {
                     	String[] commandArg = command.split("\\s+");
                         sendMessage(commandArg);
                     }
-                    else if(command.equalsIgnoreCase("exit")){
+                    else if(command.startsWith("exit")){
 
 											  System.out.println("Closing connections...");
                         System.out.println("Chat Exited!");
@@ -256,6 +256,15 @@ public class Chat {
                 String st;
                 try {
                     st = in.readLine();
+										if(st == null){
+											 stop();	//the connection was closed.
+											 System.out.println("Connection was terminated by: "
+											+clientSocket.getInetAddress().getHostAddress()
+											+":"+clientSocket.getPort()+". ");
+
+											 return;
+										 }
+
                     System.out.println("Message from "
 										+clientSocket.getInetAddress().getHostAddress()
 										+":"+clientSocket.getPort()+" : "+st);
@@ -359,7 +368,7 @@ class Destination{
     private boolean isConnected;
 
     public Destination(InetAddress remoteHost, int remotePort) {
-        super();
+
         this.remoteHost = remoteHost;
         this.remotePort = remotePort;
     }
