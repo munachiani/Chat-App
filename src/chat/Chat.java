@@ -12,6 +12,7 @@ import java.util.*;
 
 public class Chat {
 
+	//if the user enters a valid port number( a number) then start the chat loop.
 	 public static void main(String[] arg){
 	        if(arg != null && arg.length > 0){
 	            try{
@@ -22,7 +23,7 @@ public class Chat {
 	                System.out.println("Invalid Argument for the port");
 	            }
 	        }else{
-	            System.out.println("Invalid Args : java chat.Chat <PORT>");
+	            System.out.println("Invalid Args : run with 'java chat.Chat <PORT#>'");
 	        }
 	    }
 
@@ -32,7 +33,7 @@ public class Chat {
     private int clientCounter = 1;
     private Server messageReciever ;
 
-
+//required meathods
     private Chat(int myPort) {
         this.myPort = myPort;
     }
@@ -106,8 +107,7 @@ public class Chat {
                 Destination destinationHost = new Destination(remoteAddress,remotePort);
                 if(destinationHost.initConnections()){
                 	destinationsHosts.put(clientCounter, destinationHost);
-                    clientCounter++;
-                    System.out.println("Connected successfully");
+                    System.out.println("Connected successfully, client id: " + clientCounter++);
 
                 }else{
 
@@ -119,13 +119,27 @@ public class Chat {
                 System.out.println("Invalid Remote Host Address, unable to connect");
             }
         }else{
+					//trying to connect  with no/wrong port
             System.out.println("Invalid command format , Kindly follow : connect <destination> <port no>");
         }
 
     }
 
     private void terminate(String[] commandArg){
+			if(commandArg != null){
+					try {
+						int id = Integer.parseInt(commandArg);
+						if(destinationsHosts.containsKey(id) == false) throw NumberFormatException;
 
+	    			Destination destinationHost = destinationsHosts.get(id;
+						destinationHost.closeConnection();
+
+					}catch(NumberFormatException e){
+                System.out.println("Invalid connection ID, unable to terminate");
+									}
+				}else {
+						System.out.println("Invalid command format , Kindly follow : terminate <connectionID>");
+					}
 
     }
 
