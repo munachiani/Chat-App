@@ -134,7 +134,7 @@ public class Chat {
 				if (destinationsHosts.containsKey(id) == false) {
 					System.out.println("Invalid connection ID, unable to terminate, try list");
 					return;
-				} // continue if there's a valid id
+				} // continue if theres a valid id
 
 				Destination destinationHost = destinationsHosts.get(id);
 				boolean closed = !destinationHost.closeConnection();
@@ -224,9 +224,9 @@ public class Chat {
 	 */
 
 	/*
-	 * Client class - connects to the specified tcp socket on a new thread
+	 * Client class - connects to the specified TCP socket on a new thread
 	 * (Runnable) listens for new messages from the connected client. server
-	 * manages a list of these.
+	 * magages a list of these.
 	 * 
 	 */
 
