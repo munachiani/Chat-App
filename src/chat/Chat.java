@@ -11,346 +11,400 @@ import java.net.UnknownHostException;
 import java.util.*;
 
 public class Chat {
-	
-	 public static void main(String[] arg){
 
+	// if the user enters a valid port number( a number) then start the chat loop.
+	public static void main(String[] arg) {
+		if (arg != null && arg.length > 0) {
+			try {
+				int listenPort = Integer.parseInt(arg[0]);
+				Chat chatApp = new Chat(listenPort);
+				chatApp.startChat();
+			} catch (NumberFormatException nfe) {
+				System.out.println("Invalid Argument for the port");
+			}
+		} else {
+			System.out.println("Invalid Args : run with 'java chat.Chat <PORT#>'");
+		}
+	}
 
-	        if(arg != null && arg.length > 0){
+	private int myPort;
+	private InetAddress myIP;
+	private Map<Integer, Destination> destinationsHosts = new TreeMap<>();
+	private int clientCounter = 1;
+	private Server messageReciever;
 
-	            try{
+	// required methods
+	private Chat(int myPort) {
+		this.myPort = myPort;
+	}
 
-	                int listenPort = Integer.parseInt(arg[0]);
-	                Chat chatApp = new Chat(listenPort);
-	                chatApp.startChat();
+	private String getmyIP() {
+		return myIP.getHostAddress();
+	}
 
-	            }catch(NumberFormatException nfe){
-	                System.out.println("Invalid Argument for the port");
-	            }
+	private int getmyPort() {
+		return myPort;
+	}
 
-	        }else{
-	            System.out.println("Invalid Args : java chat.Chat <PORT>");
-	        }
+	private void help() {
+		System.out.println("  --> Command manual <--");
+		System.out.println("terminate <connection_id> ......... close the connection for the selected id");
+		System.out.println("connect <Destination> <dest-port> . Connect with destination IP and Port");
+		System.out.println("send <connection_id> <message> .... Send message using connection id");
+		System.out.println("myip ...... Display the ip Address of this process");
+		System.out.println("myport .... Displays the port listening for incoming connections");
+		System.out.println("list ...... Display all connection with detsination hosts");
+		System.out.println("exit ..... closes all connections and terminate the process");
+		System.out.println("\n");
 
-	    }
+	}
 
-    private int myPort;
-    private InetAddress myIP;
-    private Map<Integer, Destination> destinationsHosts = new TreeMap<>();
-    private int clientCounter = 1;
-    private Server messageReciever ;
+	private void sendMessage(String[] commandArg) {
+		if (commandArg.length > 2) {
+			try {
+				int id = Integer.parseInt(commandArg[1]);
+				Destination destinationHost = destinationsHosts.get(id);
+				System.out.println("id====" + destinationsHosts.get(id));
+				if (destinationHost != null) {
+					StringBuilder message = new StringBuilder();
+					for (int i = 2; i < commandArg.length; i++) {
+						message.append(commandArg[i]);
+						message.append(" ");
+					}
+					destinationHost.sendMessage(message.toString());
+					System.out.println("Mesage send successfully");
+				} else
+					System.out.println("No Connection available with provided connection id,kindly check list command");
 
-  
-    private Chat(int myPort) {
-        this.myPort = myPort;
-    }
+			} catch (NumberFormatException ne) {
+				System.out.println("Invalid Connection id ,check list command");
+			}
+		} else {
+			System.out.println("Invalid command format , Kindly follow : send <connection id.> <message>");
+		}
+	}
 
-    private String getmyIP(){
-        return myIP.getHostAddress();
-    }
+	private void listDestinations() {
+		System.out.println("Id:\tIP Address\tPort");
+		if (destinationsHosts.isEmpty()) {
+			System.out.println("No Destinations available");
+		} else {
+			for (Integer id : destinationsHosts.keySet()) {
+				Destination destinationHost = destinationsHosts.get(id);
+				System.out.println(id + "\t" + destinationHost.toString());
+			}
+		}
+		System.out.println();
+	}
 
-    private int getmyPort(){
-        return myPort;
-    }
+	private void connect(String[] commandArg) {
 
+		if (commandArg != null && commandArg.length == 3) {
+			try {
+				InetAddress remoteAddress = InetAddress.getByName(commandArg[1]);
+				int remotePort = Integer.parseInt(commandArg[2]);
+				System.out.println("Connecting to " + remoteAddress + " on port: " + remotePort);
 
-    private void help(){
-        System.out.println(" information about the available user interface options or command manual");
-        System.out.println("myip : Display the ip Address of this process");
-        System.out.println("myport : Displays the port on which process is listening for incoming connections");
-        System.out.println("connect <Destination> <dest-port> : Establish new connection with destination IP and Destination Port");
-        System.out.println("list : Display all connection with detsination hosts");
-        System.out.println("terminate <connection_id> : close the connection for the destination host wrt to connection id");
-        System.out.println("send <connection_id> <message> : Send message with connection id to the destination host and port");
-        System.out.println("exit : closes all connections and terminate the process");
-        System.out.println("\n");
+				Destination destinationHost = new Destination(remoteAddress, remotePort);
+				if (destinationHost.initConnections()) {
+					destinationsHosts.put(clientCounter, destinationHost);
+					System.out.println("Connected successfully, client id: " + clientCounter++);
 
-    }
+				} else {
 
-    private void sendMessage(String[] commandArg){
-        if(commandArg.length > 2){
-            try{
-                int id = Integer.parseInt(commandArg[1]);
-                Destination destinationHost = destinationsHosts.get(id);
-                System.out.println("id===="+destinationsHosts.get(id));
-                if(destinationHost != null){
-                    StringBuilder message = new StringBuilder();
-                    for(int i = 2 ; i < commandArg.length ; i++){
-                        message.append(commandArg[i]);
-                        message.append(" ");
-                    }
-                    destinationHost.sendMessage(message.toString());
-                    System.out.println("Mesage send successfully");
-                }else
-                    System.out.println("No Connection available with provided connection id,kindly check list command");
-            }catch(NumberFormatException ne){
-                System.out.println("Invalid Connection id ,check list command");
-            }
-        }else{
-            System.out.println("Invalid command format , Kindly follow : send <connection id.> <message>");
-        }
-    }
-    
-    private void listDestinations(){
-        System.out.println("Id:\tIP Address\tPort");
-        if(destinationsHosts.isEmpty()){
-            System.out.println("No Destinations available");
-        }else{
-            for(Integer id : destinationsHosts.keySet()){
-                Destination destinationHost = destinationsHosts.get(id);
-                System.out.println(id+"\t"+destinationHost.toString());
-            }
-        }
-        System.out.println();
-    }
+					System.out.println("Unable to establish connection, try again");
+				}
+			} catch (NumberFormatException ne) {
+				System.out.println("Invalid Remote Host Port, unable to connect");
+			} catch (UnknownHostException e) {
+				System.out.println("Invalid Remote Host Address, unable to connect");
+			}
+		} else {
+			// trying to connect with no/wrong port
+			System.out.println("Invalid command format , Kindly follow : connect <destination> <port no>");
+		}
 
-    private void connect(String[] commandArg){
-    	
-        if(commandArg != null && commandArg.length == 3){
-            try {
-                InetAddress remoteAddress = InetAddress.getByName(commandArg[1]);
-                int remotePort = Integer.parseInt(commandArg[2]);
-                Destination destinationHost = new Destination(remoteAddress,remotePort);
-                if(destinationHost.initConnections()){
-                	destinationsHosts.put(clientCounter, destinationHost);
-                    clientCounter++;
-                    System.out.println("Connected successfully");
+	}
 
-                }else{
+	private void terminate(String[] commandArg) {
+		if (commandArg != null) {
+			System.out.println("Attempting to terminate Cid: " + commandArg[1]);
+			try {
+				int id = Integer.parseInt(commandArg[1]);
+				if (destinationsHosts.containsKey(id) == false) {
+					System.out.println("Invalid connection ID, unable to terminate, try list");
+					return;
+				} // continue if there's a valid id
 
-                    System.out.println("Unable to establish connection, try again");
-                }
-            }catch(NumberFormatException ne){
-                System.out.println("Invalid Remote Host Port, unable to connect");
-            }catch (UnknownHostException e) {
-                System.out.println("Invalid Remote Host Address, unable to connect");
-            }
-        }else{
-            System.out.println("Invalid command format , Kindly follow : connect <destination> <port no>");
-        }
-        
-    }
+				Destination destinationHost = destinationsHosts.get(id);
+				boolean closed = !destinationHost.closeConnection();
+				if (closed) {
+					System.out.println("ConnectionID: " + id + " was terminated, but i'll be back!");
+					destinationsHosts.remove(id);
+				}
 
-    private void terminate(String[] commandArg){
-       
+			} catch (NumberFormatException e) {
+				System.out.println("Invalid connection ID, unable to terminate");
+			}
+		} else {
+			System.out.println("Invalid command format , Kindly follow : terminate <connectionID>");
+		}
 
-    }
+	}
 
-    private void startChat(){
+	private void startChat() {
 
-    	
-        Scanner scanner = new Scanner(System.in);
-        try{
-        	
-        	 myIP = InetAddress.getLocalHost();
-             messageReciever = new Server();
-             new Thread(messageReciever).start();
-             
-             
-            while(true){
-                System.out.print("Enter the command :");
-                String command = scanner.nextLine();
-                if(command != null && command.trim().length() > 0){
-                    command = command.trim();
-                    if(command.equalsIgnoreCase("help")){
-                    	help();        
-                    }else if(command.equalsIgnoreCase("myip")){
-                        System.out.println(getmyIP());
-                    }else if(command.equalsIgnoreCase("myport")){
-                        System.out.println(getmyPort());
-                    }else if(command.startsWith("connect")){
-                        String[] commandArg = command.split("\\s+");
-                        connect(commandArg);
-                    }
-                    else if(command.equalsIgnoreCase("list")){
-                    	 listDestinations();
-                    }
-                    else if(command.startsWith("terminate")){
-                    	String[] args = command.split("\\s+");
-                        terminate(args);
-                    }
-                    else if(command.startsWith("send")){
-                    	String[] commandArg = command.split("\\s+");
-                        sendMessage(commandArg);
-                    }
-                    else if(command.equalsIgnoreCase("exit")){
-                        System.out.println("Chat Exited!");
-                        closeAll();
-                        System.exit(0);
-                    }else{
-                        System.out.println("Invalid command, try again!!!");
-                        System.out.println();
-                    }
-                }else{
-                    System.out.println("Invalid command, try again!!!");
-                    System.out.println();
-                }
+		Scanner scanner = new Scanner(System.in);
+		try {
 
-            }
-        }catch (UnknownHostException e) {
-            e.printStackTrace();
-        }finally{
-            if(scanner != null)
-                scanner.close();
-            closeAll();
-        }
-    }
-    private void closeAll(){
-        for(Integer id : destinationsHosts.keySet()){
-            Destination destinationHost = destinationsHosts.get(id);
-            destinationHost.closeConnection();
-        }
-        destinationsHosts.clear();
-        messageReciever.stopChat();
-    }
+			myIP = InetAddress.getLocalHost();
+			messageReciever = new Server();
+			new Thread(messageReciever).start();
 
-    private class Server implements Runnable{
+			while (true) {
+				System.out.print("Enter the command :");
+				String command = scanner.nextLine();
+				if (command != null && command.trim().length() > 0) {
+					command = command.trim();
+					// common help args..
+					if (command.equalsIgnoreCase("help") || command.equalsIgnoreCase("/h")
+							|| command.equalsIgnoreCase("-h")) {
+						help();
+					} else if (command.equalsIgnoreCase("myip")) {
+						System.out.println(getmyIP());
+					} else if (command.equalsIgnoreCase("myport")) {
+						System.out.println(getmyPort());
+					} else if (command.startsWith("connect")) {
+						String[] commandArg = command.split("\\s+");
+						connect(commandArg);
+					} else if (command.equalsIgnoreCase("list")) {
+						listDestinations();
+					} else if (command.startsWith("terminate")) {
+						String[] args = command.split("\\s+");
+						terminate(args);
+					} else if (command.startsWith("send")) {
+						String[] commandArg = command.split("\\s+");
+						sendMessage(commandArg);
+					} else if (command.startsWith("exit")) {
 
-        BufferedReader in = null;
-        Socket socket = null;
-        boolean isStopped ;
-        List<Clients> clientList = new ArrayList<Clients>();
+						System.out.println("Closing connections...");
+						System.out.println("Chat Exited!");
+						closeAll();
+						System.exit(0);
+					} else {
+						System.out.println("Invalid command, try again!!!");
+						System.out.println();
+					}
+				} else {
+					System.out.println("Invalid command, try again!!!");
+					System.out.println();
+				}
 
-        private class Clients implements Runnable{
+			}
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		} finally {
+			if (scanner != null)
+				scanner.close();
+			closeAll();
+		}
+	}
 
-            private BufferedReader in = null;
-            private Socket clientSocket = null;
-            private boolean isStopped = false;
-            private Clients(BufferedReader in,Socket ipAddress) {
-                this.in = in;
-                this.clientSocket = ipAddress;
-            }
+	private void closeAll() {
+		for (Integer id : destinationsHosts.keySet()) {
+			Destination destinationHost = destinationsHosts.get(id);
+			destinationHost.closeConnection();
+		}
+		destinationsHosts.clear();
+		messageReciever.stopChat();
+	}
 
-//            @Override
-            public void run() {
+	/*
+	 * internal/helper object declarations below...
+	 */
 
-                while(!clientSocket.isClosed() && !this.isStopped)
-                {
-                    String st;
-                    try {
-                        st = in.readLine();
-                        System.out.println("Message from " +clientSocket.getInetAddress().getHostAddress()+":"+clientSocket.getPort()+" : "+st);
-                    } catch (IOException e) {
-                    	e.printStackTrace();
-                    }
-                }
-            }
+	/*
+	 * Client class - connects to the specified tcp socket on a new thread
+	 * (Runnable) listens for new messages from the connected client. server
+	 * manages a list of these.
+	 * 
+	 */
 
-            public void stop(){
+	private class Clients implements Runnable {
 
-                if(in != null)
-                    try {
-                        in.close();
-                    } catch (IOException e) {
-                    }
+		private BufferedReader in = null;
+		private Socket clientSocket = null;
+		private boolean isStopped = false;
 
-                if(clientSocket != null)
-                    try {
-                        clientSocket.close();
-                    } catch (IOException e) {
-                    }
-                isStopped = true;
-                Thread.currentThread().interrupt();
-            }
+		private Clients(BufferedReader in, Socket ipAddress) {
+			this.in = in;
+			this.clientSocket = ipAddress;
+		}
 
-        }
-        @Override
-        public void run() {
+		@Override
+		public void run() {
 
-            ServerSocket s;
-            try {
-                s = new ServerSocket(myPort);
-                System.out.println("Server Waiting For The Client");
-                while(!isStopped)
-                {
-                    try {
-                        socket = s.accept();
-                        in = new BufferedReader(new
-                                InputStreamReader(socket.getInputStream()));
-                        System.out.println(socket.getInetAddress().getHostAddress()+":"+socket.getPort()+" : client successfully connected.");
-                        Clients clients = new Clients(in, socket);
-                        new Thread(clients).start();
-                        clientList.add(clients);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            } catch (IOException e1) {
+			while (!clientSocket.isClosed() && !this.isStopped) {
+				String st;
+				try {
+					st = in.readLine();
+					if (st == null) {
+						stop(); // the connection was closed.
+						System.out.println("Connection was terminated by: "
+								+ clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort() + ". ");
 
-            }
+						return;
+					}
 
-        }
+					System.out.println("Message from " + clientSocket.getInetAddress().getHostAddress() + ":"
+							+ clientSocket.getPort() + " : " + st);
 
-        public void stopChat(){
-            isStopped = true;
-            for(Clients clients : clientList){
-                clients.stop();
-            }
-            Thread.currentThread().interrupt();
-        }
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 
-    }
-    
-    
+		public void stop() {
 
-}
+			if (in != null)
+				try {
+					in.close();
+				} catch (IOException e) {
+				}
 
-class Destination{
+			if (clientSocket != null)
+				try {
+					clientSocket.close();
+				} catch (IOException e) {
+				}
+			isStopped = true;
+			Thread.currentThread().interrupt();
+		}
 
-    private InetAddress remoteHost;
-    private int remotePort;
-    private Socket connection;
-    private PrintWriter out;
-    private boolean isConnected;
+	} // end of client class
 
-    public Destination(InetAddress remoteHost, int remotePort) {
-        super();
-        this.remoteHost = remoteHost;
-        this.remotePort = remotePort;
-    }
+	/*
+	 * Server class - creates new TCP socket on a new thread (Runnable) this
+	 * allows us to have multiple non blocking connections.
+	 * 
+	 */
 
-    public boolean initConnections(){
-        try {
-            this.connection = new Socket(remoteHost, remotePort);
-            this.out = new PrintWriter(connection.getOutputStream(), true);
-            isConnected = true;
-        } catch (IOException e) {
+	private class Server implements Runnable {
 
-        }
-        return isConnected;
-    }
-    public InetAddress getRemoteHost() {
-        return remoteHost;
-    }
-    public void setRemoteHost(InetAddress remoteHost) {
-        this.remoteHost = remoteHost;
-    }
-    public int getRemotePort() {
-        return remotePort;
-    }
-    public void setRemotePort(int remotePort) {
-        this.remotePort = remotePort;
-    }
+		BufferedReader in = null;
+		Socket socket = null;
+		boolean isStopped;
+		List<Clients> clientList = new ArrayList<Clients>();
 
-    public void sendMessage(String message){
-        if(isConnected){
-            out.println(message);
-        }
-    }
-    public void closeConnection(){
+		@Override
+		public void run() {
 
-        if(out != null)
-            out.close();
-        if(connection != null){
-            try {
-                connection.close();
-            } catch (IOException e) {
-            }
-        }
-        isConnected = false;
-    }
-    @Override
-    public String toString() {
-        return  remoteHost + "\t" + remotePort;
-    }
-}
+			ServerSocket s;
+			try {
+				s = new ServerSocket(getmyPort());
+				System.out.println("Server Waiting For The Client");
+				while (!isStopped) {
+					try {
+						socket = s.accept();
+						in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+						System.out.println(socket.getInetAddress().getHostAddress() + ":" + socket.getPort()
+								+ " : client successfully connected.");
 
+						Clients clients = new Clients(in, socket);
+						new Thread(clients).start();
+						clientList.add(clients);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			} catch (IOException e1) {
+
+			}
+
+		}
+
+		public void stopChat() {
+			isStopped = true;
+			for (Clients clients : clientList) {
+				clients.stop();
+			}
+			Thread.currentThread().interrupt();
+		}
+
+	}
+
+} // end of server class
+
+/*
+ * Destination class wraps the socket and output stream of each client to make
+ * send messages easier. also help manage socket connection.
+ * 
+ */
+
+class Destination {
+
+	private InetAddress remoteHost;
+	private int remotePort;
+	private Socket connection;
+	private PrintWriter out;
+	private boolean isConnected;
+
+	public Destination(InetAddress remoteHost, int remotePort) {
+
+		this.remoteHost = remoteHost;
+		this.remotePort = remotePort;
+	}
+
+	public boolean initConnections() {
+		try {
+			this.connection = new Socket(remoteHost, remotePort);
+			this.out = new PrintWriter(connection.getOutputStream(), true);
+			isConnected = true;
+		} catch (IOException e) {
+
+		}
+		return isConnected;
+	}
+
+	public InetAddress getRemoteHost() {
+		return remoteHost;
+	}
+
+	public void setRemoteHost(InetAddress remoteHost) {
+		this.remoteHost = remoteHost;
+	}
+
+	public int getRemotePort() {
+		return remotePort;
+	}
+
+	public void setRemotePort(int remotePort) {
+		this.remotePort = remotePort;
+	}
+
+	public void sendMessage(String message) {
+		if (isConnected) {
+			out.println(message);
+		}
+	}
+
+	public boolean closeConnection() {
+
+		if (out != null)
+			out.close();
+		if (connection != null) {
+			try {
+				connection.close();
+			} catch (IOException e) {
+			}
+		}
+		isConnected = false;
+		return isConnected;
+	}
+
+	@Override
+	public String toString() {
+		return remoteHost + "\t" + remotePort;
+	}
+} // end of destination class
